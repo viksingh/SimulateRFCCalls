@@ -1,0 +1,90 @@
+package org.demo.routing;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Properties;
+
+import com.google.common.io.Files;
+import com.sap.conn.jco.AbapException;
+import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoDestinationManager;
+import com.sap.conn.jco.JCoException;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.ext.DestinationDataProvider;
+
+public class simulateRFCBean {
+
+	static String DESTINATION_NAME1 = "ABAP_AS_WITHOUT_POOL";
+	static String DESTINATION_NAME2 = "ABAP_AS_WITH_POOL";
+
+	static {
+
+		// JCO Properties
+		Properties connectProperties = new Properties();
+
+		connectProperties.setProperty(DestinationDataProvider.JCO_ASHOST, PropHelper.getProperty("JCO_ASHOST"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_SYSNR, PropHelper.getProperty("JCO_SYSNR"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_CLIENT, PropHelper.getProperty("JCO_CLIENT"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_USER, PropHelper.getProperty("JCO_USER"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_PASSWD, PropHelper.getProperty("JCO_PASSWD"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_LANG, "en");
+		connectProperties.setProperty(DestinationDataProvider.JCO_TRACE,"1");		
+//		connectProperties.setProperty(DestinationDataProvider.JCO_USE_SAPGUI,"1");
+		connectProperties.setProperty(DestinationDataProvider.JCO_LANG, PropHelper.getProperty("JCO_LANG"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_POOL_CAPACITY, PropHelper.getProperty("JCO_POOL_CAPACITY"));
+		connectProperties.setProperty(DestinationDataProvider.JCO_PEAK_LIMIT, PropHelper.getProperty("JCO_PEAK_LIMIT"));
+
+		createDestinationDataFile(DESTINATION_NAME1, connectProperties);
+		createDestinationDataFile(DESTINATION_NAME2, connectProperties);
+
+	}
+
+	static void createDestinationDataFile(String destinationName, Properties connectProperties) {
+		File destCfg = new File(destinationName + ".jcoDestination");
+		try {
+			FileOutputStream fos = new FileOutputStream(destCfg, false);
+			connectProperties.store(fos, "for tests only !");
+			fos.close();
+		} catch (Exception e) {
+			throw new RuntimeException("Unable to create the destination files", e);
+		}
+	}
+
+	public static void main(String[] args) throws JCoException, IOException {
+
+//Read the file and covert into a byte array	
+		byte[] data1 = Files.toByteArray(new File("C://temp//bad.txt"));	
+		
+//Create JCO Dest
+		JCoDestination destination = JCoDestinationManager.getDestination(DESTINATION_NAME2);
+		JCoFunction function = destination.getRepository().getFunction("FM_NAME");
+//Set attributes for FM call
+		function.getImportParameterList().setValue("SOURCE",data1);
+	    function.getImportParameterList().setValue("SNDPRN","*****WMS***");		   
+		
+//Execute FM ..no need to check values as we're checking only for errors		
+		if (function == null)
+			throw new RuntimeException("FM_NAME not found in SAP.");
+		try {
+			function.execute(destination);
+
+			System.out.println("All good");
+//			Message msg = new Message();
+//
+//			RoutingCollection routingTab = new RoutingCollection();
+//			ReceiverCollection rcvTab = new ReceiverCollection();
+//
+//			ArrayList<RoutingVal> rtValList = new ArrayList<RoutingVal>();
+//			ArrayList<ReceiverList> rcvList = new ArrayList<ReceiverList>();
+
+		} catch (AbapException e) {
+			// System.out.println(e.toString());
+			return;
+		}
+
+	}
+
+}
