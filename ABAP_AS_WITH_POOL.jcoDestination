@@ -2,8 +2,8 @@
 #Tue Dec 03 14:12:45 EST 2013
 jco.destination.pool_capacity=3
 jco.client.lang=en
-jco.client.ashost=GCRsap
-jco.client.user=AUSINGHVI1
+jco.client.ashost=host
+jco.client.user=myuser
 jco.destination.peak_limit=10
 jco.client.sysnr=00
 jco.client.passwd=xxxxxxxxxxx
