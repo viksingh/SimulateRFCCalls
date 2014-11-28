@@ -68,7 +68,7 @@ public class simulateRFCBean {
 		
 //Execute FM ..no need to check values as we're checking only for errors		
 		if (function == null)
-			throw new RuntimeException("/GLB/ZGTIS_GENERATE_IDOC_XML not found in SAP.");
+			throw new RuntimeException("ZGTIS_GENERATE_IDOC_XML not found in SAP.");
 		try {
 			function.execute(destination);
 			
