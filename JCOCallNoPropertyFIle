@@ -1,0 +1,90 @@
+package com.debug.rfc;
+
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import com.google.common.io.Files;
+import com.sap.conn.jco.AbapException;
+import com.sap.conn.jco.JCoDestination;
+import com.sap.conn.jco.JCoDestinationManager;
+import com.sap.conn.jco.JCoException;
+import com.sap.conn.jco.JCoFunction;
+import com.sap.conn.jco.ext.DestinationDataProvider;
+
+public class simulateRFCBean {
+
+	static String DESTINATION_NAME1 = "ABAP_AS_WITHOUT_POOL";
+	static String DESTINATION_NAME2 = "ABAP_AS_WITH_POOL";
+
+	static {
+
+		// JCO Properties
+		Properties connectProperties = new Properties();
+
+		connectProperties.setProperty(DestinationDataProvider.JCO_ASHOST, "host");
+		
+		connectProperties.setProperty(DestinationDataProvider.JCO_SYSNR, "02");
+		connectProperties.setProperty(DestinationDataProvider.JCO_CLIENT, "001");
+		connectProperties.setProperty(DestinationDataProvider.JCO_USER, "user");
+		connectProperties.setProperty(DestinationDataProvider.JCO_PASSWD, "&&&&&&&");
+		connectProperties.setProperty(DestinationDataProvider.JCO_LANG, "en");
+		connectProperties.setProperty(DestinationDataProvider.JCO_TRACE,"1");		
+		connectProperties.setProperty(DestinationDataProvider.JCO_LANG, "en");
+		connectProperties.setProperty(DestinationDataProvider.JCO_POOL_CAPACITY, "3");
+		connectProperties.setProperty(DestinationDataProvider.JCO_PEAK_LIMIT, "10");
+
+		createDestinationDataFile(DESTINATION_NAME1, connectProperties);
+		createDestinationDataFile(DESTINATION_NAME2, connectProperties);
+
+	}
+
+	static void createDestinationDataFile(String destinationName, Properties connectProperties) {
+		File destCfg = new File(destinationName + ".jcoDestination");
+		try {
+			FileOutputStream fos = new FileOutputStream(destCfg, false);
+			connectProperties.store(fos, "for tests only !");
+			fos.close();
+		} catch (Exception e) {
+			throw new RuntimeException("Unable to create the destination files", e);
+		}
+	}
+
+	public static void main(String[] args) throws JCoException, IOException {
+
+//Read the file and covert into a byte array	
+		//byte[] fileData = Files.toByteArray(new File("C://temp//ORDERSVES1.txt"));	
+		
+		
+		
+		byte[] fileData = Files.toByteArray(new File("C://temp//ORDERSECItxt.txt"));
+		
+		
+//Create JCO Dest
+		JCoDestination destination = JCoDestinationManager.getDestination(DESTINATION_NAME2);
+		JCoFunction function = destination.getRepository().getFunction("ZGTIS_GENERATE_IDOC_XML");
+
+		//Set attributes for FM call
+		function.getImportParameterList().setValue("SOURCE",fileData);
+	    function.getImportParameterList().setValue("SNDPRN","TESTSENDER");	
+	    
+//		JCoStructure returnData = function.getExportParameterList()
+//        .getStructure("TARGET");	    
+		
+//Execute FM ..no need to check values as we're checking only for errors		
+		if (function == null)
+			throw new RuntimeException("ZGTIS_GENERATE_IDOC_XML not found in SAP.");
+		try {
+			function.execute(destination);
+			
+			System.out.println("All good");
+
+		} catch (AbapException e) {
+			return;
+		}
+
+	}
+
+}
