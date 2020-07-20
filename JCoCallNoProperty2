@@ -1,0 +1,48 @@
+package com.debug.rfc;
+import java.io.File;
+import java.io.IOException;
+
+import com.google.common.io.Files;
+import com.sap.mw.jco.IFunctionTemplate;
+import com.sap.mw.jco.JCO;
+import com.sap.mw.jco.JCO.Table;
+
+public class JCO2test {
+
+
+
+	
+	public static void main(String[] args) throws IOException {
+
+		JCO.Client client = null;
+
+		System.out.println(" Creating client");
+		
+		client = JCO.createClient("001", // SAP client
+				"USER", // userid
+				"passwdorddd", // password
+				"EN", // language
+				"hostname", // host name
+				"SID", // SID
+				"RFCGROUP"); // system number
+
+		
+		client.connect();
+		JCO.Repository repository;
+
+		repository = new JCO.Repository("RFCCall", client);
+		
+		IFunctionTemplate ftemplate11 = repository
+				.getFunctionTemplate("ZGTIS_GENERATE_IDOC_XML");
+		
+
+		JCO.Function executeJCOFunction = ftemplate11.getFunction();
+		
+		byte[] fileData = Files.toByteArray(new File("C://temp//ORDERSVES1.txt"));	
+		executeJCOFunction.getImportParameterList().setValue(fileData, "SOURCE");
+		executeJCOFunction.getImportParameterList().setValue("TESTPART","SNDPRN");
+
+		client.execute(executeJCOFunction);
+
+	}
+}
